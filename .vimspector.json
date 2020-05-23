@@ -1,0 +1,26 @@
+{
+  "configurations": {
+    "Vim - run a Python script": {
+      "adapter": "debugpy",
+      "variables": [
+        {
+          "python_path": "${workspaceRoot}"
+        }
+      ],
+      "configuration": {
+        "name": "Run current file",
+        "type": "debugpy",
+        "request": "launch",
+        "cwd": "${workspaceRoot}",
+        "python": "python",
+        "stopOnEntry": false,
+        "console": "externalTerminal",
+        "debugOptions": [],
+        "program": "${workspaceRoot}/${relativeFile}",
+        "env": {
+          "PYTHONPATH": "${workspaceRoot}"
+        }
+      }
+    }
+  }
+}
