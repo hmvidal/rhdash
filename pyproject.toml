@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "rhdash"
+version = "0.0.0"
+description = "Dashboard for RobinHood trading"
+authors = ["Hernando M. Vidal <nando@hmvidal.io>"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.5"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.4.2"
+jupyterlab = "^2.1.2"
+debugpy = "^1.0.0-beta.9"
+pytest-cov = "^2.9.0"
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
