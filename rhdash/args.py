@@ -3,7 +3,7 @@ from argparse import ArgumentParser
 from argparse import SUPPRESS
 
 
-def setup():
+def setup_args():
     """This function sets up the arguments."""
     parser = ArgumentParser(
         add_help=False,
