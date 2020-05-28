@@ -4,6 +4,7 @@
       "adapter": "debugpy",
       "variables": [
         {
+          "user": "${anythingYouLikeHere}",
           "python_path": "${workspaceRoot}"
         }
       ],
@@ -12,7 +13,7 @@
         "type": "debugpy",
         "request": "launch",
         "cwd": "${workspaceRoot}",
-        "python": "python",
+        "python": "/home/${user}/.pyenv/shims/python",
         "stopOnEntry": false,
         "console": "externalTerminal",
         "debugOptions": [],
