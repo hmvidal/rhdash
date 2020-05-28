@@ -60,7 +60,7 @@ python-versions = "*"
 version = "1.0.7"
 
 [[package]]
-category = "dev"
+category = "main"
 description = "Python package for providing Mozilla's CA Bundle."
 name = "certifi"
 optional = false
@@ -68,7 +68,7 @@ python-versions = "*"
 version = "2020.4.5.1"
 
 [[package]]
-category = "dev"
+category = "main"
 description = "Universal encoding detector for Python 2 and 3"
 name = "chardet"
 optional = false
@@ -260,7 +260,7 @@ python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
 version = "0.18.2"
 
 [[package]]
-category = "dev"
+category = "main"
 description = "Internationalized Domain Names in Applications (IDNA)"
 name = "idna"
 optional = false
@@ -814,7 +814,7 @@ python-versions = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*"
 version = "19.0.1"
 
 [[package]]
-category = "dev"
+category = "main"
 description = "Python HTTP for Humans."
 name = "requests"
 optional = false
@@ -841,6 +841,17 @@ version = "1.3.3"
 
 [package.dependencies]
 six = ">=1.7.0"
+
+[[package]]
+category = "main"
+description = "A Python wrapper around the Robinhood API"
+name = "robin-stocks"
+optional = false
+python-versions = ">=3"
+version = "1.0.0.7"
+
+[package.dependencies]
+requests = "*"
 
 [[package]]
 category = "dev"
@@ -915,7 +926,7 @@ python-versions = "*"
 version = "0.10.0"
 
 [[package]]
-category = "dev"
+category = "main"
 description = "HTTP library with thread-safe connection pooling, file post, and more."
 name = "urllib3"
 optional = false
@@ -978,7 +989,7 @@ docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["pathlib2", "unittest2", "jaraco.itertools", "func-timeout"]
 
 [metadata]
-content-hash = "012488f9b075e73998324c23cee7505504bc87493789fbbf844442537e6f2879"
+content-hash = "45c8aba401686bb097a8be54f43fdc59efd076b219ca4f677b79318ac73745f2"
 python-versions = "^3.5"
 
 [metadata.files]
@@ -1412,6 +1423,10 @@ requests = [
 ]
 retrying = [
     {file = "retrying-1.3.3.tar.gz", hash = "sha256:08c039560a6da2fe4f2c426d0766e284d3b736e355f8dd24b37367b0bb41973b"},
+]
+robin-stocks = [
+    {file = "robin_stocks-1.0.0.7-py3-none-any.whl", hash = "sha256:aa92699499396ab341e5009413fd03daae65d0608109248a755b13c44621d132"},
+    {file = "robin_stocks-1.0.0.7.tar.gz", hash = "sha256:719f485b2592c9f5e4cef6062a83a260acc405d7b5997b2499115d73855a7c86"},
 ]
 send2trash = [
     {file = "Send2Trash-1.5.0-py3-none-any.whl", hash = "sha256:f1691922577b6fa12821234aeb57599d887c4900b9ca537948d2dac34aea888b"},
