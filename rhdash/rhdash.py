@@ -146,11 +146,11 @@ def run_with(arguments):
             }, {
                 "data": diff_graph_data,
                 "layout": {
-                    "title": f"Close Price minus EMA (% diff)"
+                    "title": "Close Price minus EMA (% diff)"
                 }
             }
 
-        app.run_server(debug=True)
+        app.run_server()
         return True
 
     return False
