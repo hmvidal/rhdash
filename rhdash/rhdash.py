@@ -99,6 +99,10 @@ def run_with(arguments):
     return False
 
 
-if __name__ == "__main__":
+def run():
     arguments = setup_args()
     run_with(arguments)
+
+
+if __name__ == "__main__":
+    run()

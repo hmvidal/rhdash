@@ -5,6 +5,9 @@ description = "Dashboard for RobinHood trading"
 authors = ["Hernando M. Vidal <nando@hmvidal.io>"]
 license = "MIT"
 
+[tool.poetry.scripts]
+rhdash = "rhdash.rhdash:run"
+
 [tool.poetry.dependencies]
 python = "^3.6.1"
 dash = "^1.12.0"
