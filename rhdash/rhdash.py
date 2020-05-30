@@ -141,7 +141,7 @@ def run_with(arguments):
             return heading, {
                 "data": value_graph_data,
                 "layout": {
-                    "title": f"{name} Close Price"
+                    "title": "Close Price and EMA"
                 }
             }, {
                 "data": diff_graph_data,
