@@ -6,11 +6,14 @@ import dash_auth
 import dash_core_components as dcc
 import dash_html_components as html
 import pandas as pd
+import plotly.graph_objects as go
 import robin_stocks
 from dash.dependencies import Input
 from dash.dependencies import Output
+from plotly.subplots import make_subplots
 
 from rhdash.alg import get_n_ema
+from rhdash.alg import get_percent_diff
 from rhdash.args import setup_args
 from rhdash.config import fetch
 
@@ -28,8 +31,7 @@ def setup_dash(config):
         html.Div(children="Symbol:"),
         dcc.Input(id="symbol", value="", type="text"),
         html.H1(id="heading", children=""),
-        dcc.Graph(id="value-graph"),
-        dcc.Graph(id="diff-graph")
+        dcc.Graph(id="value-graph")
     ])
 
     return app
@@ -58,12 +60,17 @@ def run_with(arguments):
         configuration = fetch(arguments.config)
         app = init_using(configuration)
 
-        @app.callback([
-            Output("heading", "children"),
-            Output("value-graph", "figure"),
-            Output("diff-graph", "figure")
-        ], [Input("symbol", "value")])
+        rows = 2
+
+        @app.callback(
+            [Output("heading", "children"),
+             Output("value-graph", "figure")], [Input("symbol", "value")])
         def update_figure(symbol):
+            fig = make_subplots(rows=rows,
+                                cols=1,
+                                shared_xaxes=True,
+                                vertical_spacing=0.02)
+
             try:
                 symbol = str(symbol).strip().upper()
                 name = robin_stocks.stocks.get_name_by_symbol(
@@ -78,8 +85,9 @@ def run_with(arguments):
                 ]
                 for col in float_cols:
                     df[col] = df[col].astype(float)
+                ema_days = configuration["robinhood"]["ema_days"]
 
-                for n_days in configuration["robinhood"]["ema_days"]:
+                for n_days in ema_days:
                     df[f"ema_{n_days}"] = 0.0
                     for i, row in df.iterrows():
                         if i <= (n_days - 1):
@@ -94,61 +102,45 @@ def run_with(arguments):
                 window_boundary = n_total_days * 4 / 9
                 df = df.loc[window_boundary:]
 
-                value_graph_data = [{
-                    "x": df["begins_at"],
-                    "y": df["close_price"],
-                    "type": "line",
-                    "name": "close_price"
-                }]
+                lines_prices = []
+                lines_diff = []
 
-                diff_graph_data = []
+                lines_prices.append(
+                    go.Scatter(x=df["begins_at"],
+                               y=df["close_price"],
+                               name="close_price"))
 
-                for n_days in configuration["robinhood"]["ema_days"]:
-                    data = {
-                        "x": df["begins_at"],
-                        "y": df[f"ema_{n_days}"],
-                        "type": "line",
-                        "name": f"ema_{n_days}"
-                    }
-                    value_graph_data.append(data)
-                    diff_data = {
-                        "x":
-                        df["begins_at"],
-                        "y":
-                        100.0 * (df["close_price"] - df[f"ema_{n_days}"]) /
-                        df["close_price"],
-                        "type":
-                        "line",
-                        "name":
-                        f"ema_{n_days}_diff"
-                    }
-                    diff_graph_data.append(diff_data)
+                for i, n_days in enumerate(ema_days):
+                    lines_prices.append(
+                        go.Scatter(x=df["begins_at"],
+                                   y=df[f"ema_{n_days}"],
+                                   name=f"ema_{n_days}"))
+
+                    lines_diff.append(
+                        go.Scatter(x=df["begins_at"],
+                                   y=get_percent_diff(df["close_price"],
+                                                      df[f"ema_{n_days}"]),
+                                   name=f"ema_{n_days}_diff"))
+
+                for line in lines_prices:
+                    fig.append_trace(line, 1, 1)
+
+                for line in lines_diff:
+                    fig.append_trace(line, 2, 1)
+
+                fig.update_xaxes(showgrid=True,
+                                 gridwidth=1,
+                                 gridcolor="LightPink")
+                fig.update_yaxes(zeroline=True,
+                                 zerolinewidth=3,
+                                 zerolinecolor="Pink")
+
+                fig.update_layout(hovermode="x unified", height=300 * rows)
+
             except Exception as e:
                 print(f"Could not update data for '{symbol}'.")
-                value_graph_data = [{
-                    "x": [],
-                    "y": [],
-                    "type": "line",
-                    "name": ""
-                }]
-                diff_graph_data = [{
-                    "x": [],
-                    "y": [],
-                    "type": "line",
-                    "name": ""
-                }]
 
-            return heading, {
-                "data": value_graph_data,
-                "layout": {
-                    "title": "Close Price and EMA"
-                }
-            }, {
-                "data": diff_graph_data,
-                "layout": {
-                    "title": "Close Price minus EMA (% diff)"
-                }
-            }
+            return heading, fig
 
         app.run_server()
         return True
