@@ -23,15 +23,15 @@ def setup_args():
 
 def setup_required(group):
     """Set up required arguments."""
-    group.add_argument("-c",
-                       "--config",
-                       help="File where configuration is located.",
-                       type=str,
-                       required=True)
 
 
 def setup_optional(optional):
     """Set up optional arguments, including help."""
+    optional.add_argument("-c",
+                          "--config",
+                          help="File where configuration is located.",
+                          type=str)
+
     optional.add_argument("-h",
                           "--help",
                           action="help",

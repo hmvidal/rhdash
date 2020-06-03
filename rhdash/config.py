@@ -25,17 +25,19 @@ def error(config_path):
 
 def isvalid(config, template=TEMPLATE, parent=""):
     """Validates config file against template"""
-    def is_dict_or_list(item):
-        return isinstance(item, (dict, list)) and len(item) > 0
+    # def is_dict_or_list(item):
+    #     return isinstance(item, (dict, list)) and len(item) > 0
 
-    for element in template:
-        if element not in config:
-            error(".".join([parent, element]))
-        if isinstance(template, dict) and is_dict_or_list(template[element]):
-            assert isvalid(config[element], template[element],
-                           ".".join([parent, element]))
+    return isinstance(config, dict)
 
-    return True
+    # for element in template:
+    #     if element not in config:
+    #         error(".".join([parent, element]))
+    #     if isinstance(template, dict) and is_dict_or_list(template[element]):
+    #         assert isvalid(config[element], template[element],
+    #                        ".".join([parent, element]))
+
+    # return True
 
 
 def fetch(path):
@@ -46,7 +48,7 @@ def fetch(path):
                 config = load(config_file)
                 assert isvalid(config)
                 return config
-        except JSONDecodeError:
+        except JSONDecodeError as e:
             print(f"Could not properly parse file '{path}'!")
             sys.exit(1)
     else:

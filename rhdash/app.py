@@ -1,3 +1,4 @@
+"""For building Dash app"""
 import dash
 import dash_auth
 import dash_core_components as dcc
@@ -6,7 +7,6 @@ import pandas as pd
 import plotly.graph_objects as go
 from dash.dependencies import Input
 from dash.dependencies import Output
-from numpy import nan
 from plotly.subplots import make_subplots
 
 from rhdash.alg import ema_n_days
@@ -23,8 +23,11 @@ def setup_dash(config):
     dash_config = config["dash"]
     external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
     app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
-    dash_auth.BasicAuth(
-        app, {dash_config["creds"]["user"]: dash_config["creds"]["password"]})
+
+    if "creds" in dash_config:
+        creds = dash_config["creds"]
+        if "user" in creds and "password" in creds:
+            dash_auth.BasicAuth(app, {creds["user"]: creds["password"]})
 
     app.layout = html.Div([
         html.Div(children="Symbol:"),
@@ -44,7 +47,13 @@ def init_using(config):
 
 
 def create_app(arguments):
-    configuration = fetch(arguments.config)
+    configuration = fetch(arguments.config) if arguments.config else {}
+
+    if "robinhood" not in configuration:
+        configuration["robinhood"] = {}
+    if "dash" not in configuration:
+        configuration["dash"] = {}
+
     app = init_using(configuration)
 
     rows = 3
@@ -74,7 +83,10 @@ def create_app(arguments):
 
             df["percent_diff"] = 100.0 * df["close_price"].pct_change()
 
-            ema_days = configuration["robinhood"]["ema_days"]
+            ema_days = configuration["robinhood"][
+                "ema_days"] if "ema_days" in configuration["robinhood"] else [
+                    5, 10, 20, 50
+                ]
 
             for n_days in ema_days:
                 df[f"ema_{n_days}"] = 0.0

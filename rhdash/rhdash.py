@@ -14,6 +14,7 @@ def run_with(arguments):
 
 
 def run():
+    """Main run method"""
     arguments = setup_args()
     run_with(arguments)
 
