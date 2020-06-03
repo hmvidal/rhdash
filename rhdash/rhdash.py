@@ -7,7 +7,7 @@ def run_with(arguments):
     """Main entrypoint."""
     if arguments:
         app = create_app(arguments)
-        app.run_server()
+        app.run_server(port=str(arguments.port))
         return True
 
     return False

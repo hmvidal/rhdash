@@ -2,6 +2,8 @@
 from argparse import ArgumentParser
 from argparse import SUPPRESS
 
+from rhdash import __version__
+
 
 def setup_args():
     """This function sets up the arguments."""
@@ -9,8 +11,8 @@ def setup_args():
         add_help=False,
         description="RobinHood dashboard with basic authentication.")
 
-    required = parser.add_argument_group('required arguments')
-    optional = parser.add_argument_group('optional arguments')
+    required = parser.add_argument_group("required arguments")
+    optional = parser.add_argument_group("optional arguments")
 
     setup_required(required)
     setup_optional(optional)
@@ -30,9 +32,17 @@ def setup_required(group):
 
 def setup_optional(optional):
     """Set up optional arguments, including help."""
-    # Add back help
-    optional.add_argument('-h',
-                          '--help',
-                          action='help',
+    optional.add_argument("-h",
+                          "--help",
+                          action="help",
                           default=SUPPRESS,
-                          help='show this help message and exit')
+                          help="Show this help message and exit.")
+    optional.add_argument("-p",
+                          "--port",
+                          default=8050,
+                          type=int,
+                          help="Port for default server.")
+    optional.add_argument("--version",
+                          action="version",
+                          version=f"%(prog)s {__version__}",
+                          help="Show program's version number and exit.")
