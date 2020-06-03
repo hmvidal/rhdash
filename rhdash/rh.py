@@ -4,10 +4,17 @@ import robin_stocks
 
 
 def login_using(robinhood_config):
+    user, passwd = "", ""
+
+    if "creds" in robinhood_config:
+        creds = robinhood_config["creds"]
+        if "user" in creds:
+            user = creds["user"]
+            if "password" in creds:
+                passwd = creds["password"]
+
     try:
-        robin_stocks.login(robinhood_config["creds"]["user"],
-                           robinhood_config["creds"]["password"],
-                           by_sms=True)
+        robin_stocks.login(user, passwd, by_sms=True)
     except Exception:
         print("Could not log into RobinHood.")
         sys.exit(1)

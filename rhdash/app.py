@@ -128,7 +128,10 @@ def create_app(arguments):
             fig.update_xaxes(showgrid=True,
                              gridwidth=1,
                              gridcolor="LightGreen")
-            fig.update_yaxes(zeroline=True,
+            fig.update_yaxes(showgrid=True,
+                             gridwidth=1,
+                             gridcolor="LightGreen",
+                             zeroline=True,
                              zerolinewidth=1,
                              zerolinecolor="Grey")
 

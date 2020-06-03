@@ -12,10 +12,6 @@ TEMPLATE = {
         }
     },
     "robinhood": {
-        "creds": {
-            "user": "",
-            "password": ""
-        },
         "ema_days": []
     }
 }
