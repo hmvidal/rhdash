@@ -30,7 +30,8 @@ def get_name(symbol):
 
 def get_year_data(symbol):
     try:
-        return robin_stocks.stocks.get_historicals(symbol, span="year")
+        data = robin_stocks.stocks.get_historicals(symbol, span="year")
+        return data
     except Exception as e:
         print("Could not get year data for '{symbol}'.")
         return None

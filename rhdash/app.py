@@ -10,8 +10,7 @@ from dash.dependencies import Output
 from numpy import NaN
 from plotly.subplots import make_subplots
 from rhdash.alg import ema_n_days
-from rhdash.alg import percent_diff
-from rhdash.config import fetch
+from rhdash.config import fetch_config
 from rhdash.rh import get_name
 from rhdash.rh import get_year_data
 from rhdash.rh import login_using
@@ -27,7 +26,8 @@ def setup_dash(config):
     if "creds" in dash_config:
         creds = dash_config["creds"]
         if "user" in creds and "password" in creds:
-            dash_auth.BasicAuth(app, {creds["user"]: creds["password"]})
+            if creds["user"] != "" and creds["password"] != "":
+                dash_auth.BasicAuth(app, {creds["user"]: creds["password"]})
 
     app.layout = html.Div([
         html.Div(children="Symbol:"),
@@ -46,13 +46,11 @@ def init_using(config):
     return setup_dash(config)
 
 
-def create_app(arguments):
-    configuration = fetch(arguments.config) if arguments.config else {}
+def create_app(arguments=None):
+    configuration = fetch_config(arguments)
 
     if "robinhood" not in configuration:
         configuration["robinhood"] = {}
-    if "dash" not in configuration:
-        configuration["dash"] = {}
 
     app = init_using(configuration)
 
@@ -66,7 +64,7 @@ def create_app(arguments):
                             cols=1,
                             shared_xaxes=True,
                             vertical_spacing=0.02,
-                            row_titles=["Close Price", "% Diff", "EMA Diff"])
+                            row_titles=["EMA % 2nd Derivative", "Price"])
 
         try:
             symbol = str(symbol).strip().upper()
@@ -88,6 +86,9 @@ def create_app(arguments):
                     10, 50, 100
                 ]
 
+            if len(ema_days) > 3:
+                ema_days = ema_days[:3]
+
             for n_days in ema_days:
                 df[f"ema_{n_days}"] = NaN
                 df.at[n_days - 1,
@@ -99,49 +100,63 @@ def create_app(arguments):
                         n_days, row["close_price"],
                         df.iloc[i - 1][f"ema_{n_days}"])
 
-            traces = {"close_price": [], "ema_diff": []}
+            candle_data = {
+                "x": df["begins_at"],
+                "open": df["open_price"],
+                "high": df["high_price"],
+                "low": df["low_price"],
+                "close": df["close_price"],
+                "name": symbol
+            }
+            candlestick = go.Candlestick(candle_data)
 
-            traces["close_price"].append(
-                go.Candlestick(x=df["begins_at"],
-                               open=df["open_price"],
-                               high=df["high_price"],
-                               low=df["low_price"],
-                               close=df["close_price"],
-                               name="price"))
+            fig.append_trace(candlestick, 2, 1)
 
-            traces["percent_diff"] = go.Scatter(x=df["begins_at"],
-                                                y=df["percent_diff"],
-                                                name="percent_diff")
+            blank_trace = go.Scatter(
+                x=None,
+                y=None,
+            )
+            fig.append_trace(blank_trace, 2, 1)
+            fig.append_trace(blank_trace, 2, 1)
 
             for i, n_days in enumerate(ema_days):
+                ema_trace = go.Scatter(x=df["begins_at"],
+                                       y=df[f"ema_{n_days}"],
+                                       name=f"ema_{n_days}")
 
-                traces["close_price"].append(
-                    go.Scatter(x=df["begins_at"],
-                               y=df[f"ema_{n_days}"],
-                               name=f"ema_{n_days}"))
+                ema_diff = (100.0 / df[f"ema_{n_days}"]) * (
+                    df[f"ema_{n_days}"] - df[f"ema_{n_days}"].shift(periods=1))
 
-            for line in traces["close_price"]:
-                fig.append_trace(line, 1, 1)
+                ema_diff_rate = ema_diff - ema_diff.shift(periods=1)
 
-            fig.append_trace(traces["percent_diff"], 2, 1)
+                ema_diff_rate_trace = go.Scatter(x=df["begins_at"],
+                                                 y=ema_diff_rate,
+                                                 name=f"ema_{n_days}_rate")
 
+                fig.append_trace(ema_trace, 2, 1)
+                fig.append_trace(ema_diff_rate_trace, 1, 1)
+
+            # fig.update_layout(xaxis_rangeslider_visible=False)
             fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor="Grey")
-
             fig.update_yaxes(showgrid=True,
                              gridwidth=1,
                              gridcolor="Grey",
                              zeroline=True,
                              zerolinewidth=2,
                              zerolinecolor="Grey")
-
             fig.update_layout(hovermode="x unified",
                               showlegend=False,
-                              xaxis_rangeslider_visible=False,
-                              height=(400 * rows))
+                              height=(420 * rows))
 
         except Exception as e:
             print(f"Could not update data for '{symbol}'.")
+            print(e)
 
         return heading, fig
 
     return app
+
+
+def create_server():
+    app = create_app()
+    return app.server

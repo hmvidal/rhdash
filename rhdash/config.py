@@ -2,7 +2,12 @@
 import sys
 from json import JSONDecodeError
 from json import load
+from os.path import expanduser
 from os.path import isfile
+from os.path import join
+
+DEFAULT_CONFIG_TYPE = "json"
+DEFAULT_PATH = join(expanduser("~"), ".rhdash", "config")
 
 TEMPLATE = {
     "dash": {
@@ -13,6 +18,18 @@ TEMPLATE = {
     },
     "robinhood": {
         "ema_days": []
+    }
+}
+
+DEFAULT = {
+    "dash": {
+        "creds": {
+            "user": "hello",
+            "password": "world"
+        }
+    },
+    "robinhood": {
+        "ema_days": [10, 20, 50]
     }
 }
 
@@ -40,17 +57,22 @@ def isvalid(config, template=TEMPLATE, parent=""):
     # return True
 
 
-def fetch(path):
+def fetch_config(args):
     """Get contents of config file at path, if it exists."""
-    if isfile(path):
+    config = DEFAULT
+
+    path = DEFAULT_PATH
+    filetype = DEFAULT_CONFIG_TYPE
+    config_file = args.config if args.config else ".".join([path, filetype])
+
+    if isfile(config_file):
         try:
-            with open(path, 'r') as config_file:
+            with open(config_file, 'r') as config_file:
                 config = load(config_file)
                 assert isvalid(config)
-                return config
         except JSONDecodeError as e:
             print(f"Could not properly parse file '{path}'!")
             sys.exit(1)
     else:
-        print(f"'{path}' is not a file!")
-        sys.exit(1)
+        print(f"Config '{path}' is not a file!")
+    return config
