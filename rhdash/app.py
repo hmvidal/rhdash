@@ -51,6 +51,8 @@ def create_app(arguments=None):
 
     if "robinhood" not in configuration:
         configuration["robinhood"] = {}
+    if "dash" not in configuration:
+        configuration["dash"] = {}
 
     app = init_using(configuration)
 
