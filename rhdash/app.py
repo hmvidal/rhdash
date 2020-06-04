@@ -7,8 +7,8 @@ import pandas as pd
 import plotly.graph_objects as go
 from dash.dependencies import Input
 from dash.dependencies import Output
+from numpy import NaN
 from plotly.subplots import make_subplots
-
 from rhdash.alg import ema_n_days
 from rhdash.alg import percent_diff
 from rhdash.config import fetch
@@ -85,24 +85,19 @@ def create_app(arguments):
 
             ema_days = configuration["robinhood"][
                 "ema_days"] if "ema_days" in configuration["robinhood"] else [
-                    5, 10, 20, 50
+                    10, 50, 100
                 ]
 
             for n_days in ema_days:
-                df[f"ema_{n_days}"] = 0.0
-                for i, row in df.iterrows():
-                    # ema = df.iloc[0:i + 1]["close_price"].sum() / (i + 1) ema = df.iloc[i]["close_price"] else:
-                    if i < n_days:
-                        ema = df.iloc[i]["close_price"]
-                    else:
-                        ema = ema_n_days(n_days, row["close_price"],
-                                         df.iloc[i - 1]["close_price"])
+                df[f"ema_{n_days}"] = NaN
+                df.at[n_days - 1,
+                      f"ema_{n_days}"] = df.iloc[:n_days]["close_price"].sum(
+                      ) / n_days
 
-                    df.at[i, f"ema_{n_days}"] = ema
-
-            n_total_days = len(df["begins_at"])
-            # window_boundary = n_total_days * 4 / 9
-            # df = df.loc[window_boundary:]
+                for i, row in df.iloc[n_days:].iterrows():
+                    df.at[i, f"ema_{n_days}"] = ema_n_days(
+                        n_days, row["close_price"],
+                        df.iloc[i - 1][f"ema_{n_days}"])
 
             traces = {"close_price": [], "ema_diff": []}
 
@@ -140,6 +135,7 @@ def create_app(arguments):
             fig.update_xaxes(showgrid=True,
                              gridwidth=1,
                              gridcolor="LightGreen")
+
             fig.update_yaxes(showgrid=True,
                              gridwidth=1,
                              gridcolor="LightGreen",
