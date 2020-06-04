@@ -63,7 +63,9 @@ def fetch_config(args):
 
     path = DEFAULT_PATH
     filetype = DEFAULT_CONFIG_TYPE
-    config_file = args.config if args.config else ".".join([path, filetype])
+
+    config_file = args.config if args and args.config else ".".join(
+        [path, filetype])
 
     if isfile(config_file):
         try:
