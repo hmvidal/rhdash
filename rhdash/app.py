@@ -56,7 +56,7 @@ def create_app(arguments):
 
     app = init_using(configuration)
 
-    rows = 3
+    rows = 2
 
     @app.callback(
         [Output("heading", "children"),
@@ -102,50 +102,42 @@ def create_app(arguments):
             traces = {"close_price": [], "ema_diff": []}
 
             traces["close_price"].append(
-                go.Scatter(x=df["begins_at"],
-                           y=df["close_price"],
-                           name="close_price"))
+                go.Candlestick(x=df["begins_at"],
+                               open=df["open_price"],
+                               high=df["high_price"],
+                               low=df["low_price"],
+                               close=df["close_price"],
+                               name="price"))
 
             traces["percent_diff"] = go.Scatter(x=df["begins_at"],
                                                 y=df["percent_diff"],
                                                 name="percent_diff")
 
             for i, n_days in enumerate(ema_days):
-                # df[f"ema_{n_days}"].loc[:n_days + 1] = nan
 
                 traces["close_price"].append(
                     go.Scatter(x=df["begins_at"],
                                y=df[f"ema_{n_days}"],
                                name=f"ema_{n_days}"))
 
-                traces["ema_diff"].append(
-                    go.Scatter(x=df["begins_at"],
-                               y=percent_diff(df["close_price"],
-                                              df[f"ema_{n_days}"]),
-                               name=f"ema_{n_days}_diff"))
-
             for line in traces["close_price"]:
                 fig.append_trace(line, 1, 1)
 
             fig.append_trace(traces["percent_diff"], 2, 1)
 
-            for line in traces["ema_diff"]:
-                fig.append_trace(line, 3, 1)
-
-            fig.update_xaxes(showgrid=True,
-                             gridwidth=1,
-                             gridcolor="LightGreen")
+            fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor="Grey")
 
             fig.update_yaxes(showgrid=True,
                              gridwidth=1,
-                             gridcolor="LightGreen",
+                             gridcolor="Grey",
                              zeroline=True,
-                             zerolinewidth=1,
+                             zerolinewidth=2,
                              zerolinecolor="Grey")
 
             fig.update_layout(hovermode="x unified",
                               showlegend=False,
-                              height=(300 * rows))
+                              xaxis_rangeslider_visible=False,
+                              height=(400 * rows))
 
         except Exception as e:
             print(f"Could not update data for '{symbol}'.")
