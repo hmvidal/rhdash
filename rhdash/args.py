@@ -29,7 +29,7 @@ def setup_optional(optional):
     """Set up optional arguments, including help."""
     optional.add_argument("-c",
                           "--config",
-                          default=None
+                          default=None,
                           help="File where configuration is located.",
                           type=str)
 
