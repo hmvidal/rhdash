@@ -80,20 +80,20 @@ def create_app(arguments=None):
         day_fig = make_subplots(rows=rows,
                                 cols=1,
                                 shared_xaxes=True,
-                                vertical_spacing=0.02,
-                                row_titles=["Day", symbol])
+                                vertical_spacing=0.01,
+                                row_titles=["", ""])
 
         week_fig = make_subplots(rows=rows,
                                  cols=1,
                                  shared_xaxes=True,
-                                 vertical_spacing=0.02,
-                                 row_titles=["Week", symbol])
+                                 vertical_spacing=0.01,
+                                 row_titles=["", ""])
 
         fig = make_subplots(rows=rows,
                             cols=1,
                             shared_xaxes=True,
-                            vertical_spacing=0.02,
-                            row_titles=["Year", symbol])
+                            vertical_spacing=0.01,
+                            row_titles=["", ""])
 
         try:
             name = get_name(symbol) if symbol != "" else ""
@@ -275,10 +275,14 @@ def create_app(arguments=None):
                                  zeroline=True,
                                  zerolinewidth=2,
                                  zerolinecolor="Grey")
-            day_fig.update_layout(hovermode="x unified",
+            day_fig.update_layout(title=f"{heading} - Day",
+                                  hovermode="x unified",
                                   showlegend=False,
                                   height=(420 * rows),
-                                  xaxis=dict(type="category"))
+                                  xaxis=dict(type="category"),
+                                  font=dict(family="Courier New, monospace",
+                                            size=13,
+                                            color="#7f7f7f"))
 
             week_fig.update_xaxes(
                 rangebreaks=[dict(pattern="hour", bounds=[16, 9.5])])
@@ -288,10 +292,14 @@ def create_app(arguments=None):
                                   zeroline=True,
                                   zerolinewidth=2,
                                   zerolinecolor="Grey")
-            week_fig.update_layout(hovermode="x unified",
+            week_fig.update_layout(title=f"{heading} - Week",
+                                   hovermode="x unified",
                                    showlegend=False,
                                    height=(420 * rows),
-                                   xaxis=dict(type="category"))
+                                   xaxis=dict(type="category"),
+                                   font=dict(family="Courier New, monospace",
+                                             size=13,
+                                             color="#7f7f7f"))
 
             fig.update_xaxes(rangebreaks=[dict(bounds=["sat", "mon"])])
             fig.update_yaxes(showgrid=True,
@@ -300,9 +308,13 @@ def create_app(arguments=None):
                              zeroline=True,
                              zerolinewidth=2,
                              zerolinecolor="Grey")
-            fig.update_layout(hovermode="x unified",
+            fig.update_layout(title=f"{heading} - Year",
+                              hovermode="x unified",
                               showlegend=False,
-                              height=(420 * rows))
+                              height=(420 * rows),
+                              font=dict(family="Courier New, monospace",
+                                        size=13,
+                                        color="#7f7f7f"))
 
         except Exception as e:
             print(f"Could not update data for '{symbol}'.")
