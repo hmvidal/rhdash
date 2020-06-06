@@ -20,6 +20,22 @@ def login_using(robinhood_config):
         sys.exit(1)
 
 
+def get_watchlist(name="Default"):
+    try:
+        return robin_stocks.account.get_watchlist_by_name()
+    except Exception as e:
+        print("Could not get for watchlist.")
+        return None
+
+
+def get_symbol_by_url(url):
+    try:
+        return robin_stocks.stocks.get_symbol_by_url(url)
+    except Exception as e:
+        print(f"Could not get symbol for {url}.")
+        return None
+
+
 def get_name(symbol):
     try:
         return robin_stocks.stocks.get_name_by_symbol(symbol)

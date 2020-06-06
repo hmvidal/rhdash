@@ -14,6 +14,8 @@ from rhdash.config import fetch_config
 from rhdash.rh import get_day_data
 from rhdash.rh import get_fundamentals
 from rhdash.rh import get_name
+from rhdash.rh import get_symbol_by_url
+from rhdash.rh import get_watchlist
 from rhdash.rh import get_week_data
 from rhdash.rh import get_year_data
 from rhdash.rh import login_using
@@ -32,14 +34,119 @@ def setup_dash(config):
             if creds["user"] != "" and creds["password"] != "":
                 dash_auth.BasicAuth(app, {creds["user"]: creds["password"]})
 
+    # def get_watchlist_table():
+    #     watchlist_data = get_watchlist()
+    #     if watchlist_data:
+    #         watchlist_symbols = []
+    #         for watch in watchlist_data:
+    #             watch_symbol = get_symbol_by_url(watch["instrument"])
+    #             if watch_symbol:
+    #                 watchlist_symbols.append(watch_symbol)
+
+    #         watchlist_symbols = sorted(watchlist_symbols)
+    #         config["watchlist"] = watchlist_symbols
+
+    #         n_cols = 10
+    #         n_watches = len(watchlist_symbols)
+    #         if n_watches <= n_cols:
+    #             n_rows = 1
+    #         elif n_watches % n_cols == 0:
+    #             n_rows = int(n_watches / n_cols)
+    #         else:
+    #             n_rows = int(n_watches / n_cols) + 1
+
+    #         watchlist_headers = html.Tr([])
+
+    #         t_rows = []
+    #         for r in range(n_rows):
+    #             t_row = []
+    #             for c in range(n_cols):
+    #                 index = r + (c * n_rows)
+    #                 if index < n_watches:
+    #                     this_sym = watchlist_symbols[index]
+    #                     t_row.append(
+    #                         html.Td(html.Button(this_sym, id=f"b_{this_sym}")))
+
+    #             t_rows.append(html.Tr(t_row))
+
+    #         watchlist_table = html.Table([watchlist_headers] + t_rows,
+    #                                      style={
+    #                                          "marginLeft": "auto",
+    #                                          "marginRight": "auto"
+    #                                      })
+
+    #         return watchlist_table
+    #     else:
+    #         return html.Table()
+
     app.layout = html.Div([
-        html.Div(children="Symbol:"),
+        # html.Div(id="watchlist-table", children=get_watchlist_table()),
+        html.Div(children=[html.Br(), html.Br()]),
+        # html.Div(children="Symbol:"),
         dcc.Input(id="symbol", value="", type="text"),
         html.H1(id="heading", children="", style={"textAlign": "center"}),
         html.Div(id="description-blob", style={"textAlign": "center"}),
         html.Div(id="fundamentals-table"),
+        html.Div(children=[html.Br(), html.Br()]),
+        html.Div(children=[
+            dcc.RadioItems(id="day-fib-direction-radio",
+                           options=[{
+                               "label": "Fib Off",
+                               "value": None,
+                           }, {
+                               "label": "Fib On",
+                               "value": True
+                           }],
+                           value=None,
+                           labelStyle={"display": "inline-block"}), " High: ",
+            dcc.Input(id="day-fib-high-input", value="", type="float"),
+            " Low: ",
+            dcc.Input(id="day-fib-low-input", value="", type="float")
+        ]),
         dcc.Graph(id="day-graph"),
+        html.Div(children=[
+            dcc.RadioItems(id="week-fib-direction-radio",
+                           options=[{
+                               "label": "Fib Off",
+                               "value": None,
+                           }, {
+                               "label": "Fib On",
+                               "value": True
+                           }],
+                           value=None,
+                           labelStyle={"display": "inline-block"}), " High: ",
+            dcc.Input(id="week-fib-high-input", value="", type="float"),
+            " Low: ",
+            dcc.Input(id="week-fib-low-input", value="", type="float")
+        ]),
         dcc.Graph(id="week-graph"),
+        html.Div(children=[
+            dcc.RadioItems(id="year-ema-radio",
+                           options=[{
+                               "label": "EMAs Off",
+                               "value": None
+                           }, {
+                               "label": "EMAs On",
+                               "value": "Upward"
+                           }],
+                           value=None,
+                           labelStyle={"display": "inline-block"})
+        ]),
+        html.Div(children=[
+            dcc.RadioItems(id="year-fib-direction-radio",
+                           options=[{
+                               "label": "Fib Off",
+                               "value": None
+                           }, {
+                               "label": "Fib On",
+                               "value": True
+                           }],
+                           value=None,
+                           labelStyle={"display": "inline-block"}), " High: ",
+            dcc.Input(id="year-fib-high-input", value="", type="float"),
+            " Low: ",
+            dcc.Input(id="year-fib-low-input", value="", type="float")
+        ]),
         dcc.Graph(id="year-graphs")
     ])
 
@@ -72,8 +179,23 @@ def create_app(arguments=None):
         Output("day-graph", "figure"),
         Output("week-graph", "figure"),
         Output("year-graphs", "figure")
-    ], [Input("symbol", "value")])
-    def update_figure(symbol):
+    ], [
+        Input("symbol", "value"),
+        Input("day-fib-direction-radio", "value"),
+        Input("day-fib-high-input", "value"),
+        Input("day-fib-low-input", "value"),
+        Input("week-fib-direction-radio", "value"),
+        Input("week-fib-high-input", "value"),
+        Input("week-fib-low-input", "value"),
+        Input("year-ema-radio", "value"),
+        Input("year-fib-direction-radio", "value"),
+        Input("year-fib-high-input", "value"),
+        Input("year-fib-low-input", "value")
+    ])
+    def update_figure(symbol, day_fib_direction, day_fib_high, day_fib_low,
+                      week_fib_direction, week_fib_high, week_fib_low,
+                      year_ema_radio_val, year_fib_direction, year_fib_high,
+                      year_fib_low):
         symbol = str(symbol).strip().upper()
         description = ""
         fundamentals_table = html.Table()
@@ -159,17 +281,6 @@ def create_app(arguments=None):
             if len(ema_days) > 3:
                 ema_days = ema_days[:3]
 
-            for n_days in ema_days:
-                df[f"ema_{n_days}"] = NaN
-                df.at[n_days - 1,
-                      f"ema_{n_days}"] = df.iloc[:n_days]["close_price"].sum(
-                      ) / n_days
-
-                for i, row in df.iloc[n_days:].iterrows():
-                    df.at[i, f"ema_{n_days}"] = ema_n_days(
-                        n_days, row["close_price"],
-                        df.iloc[i - 1][f"ema_{n_days}"])
-
             day_close_price_data = {
                 "x": day_df["begins_at"],
                 "y": day_df["close_price"],
@@ -238,42 +349,96 @@ def create_app(arguments=None):
             day_fig.append_trace(day_close_price, 1, 1)
             day_fig.append_trace(day_candlestick, 2, 1)
 
+            if day_fib_direction and day_fib_high and day_fib_low:
+                day_fib_data = {}
+                percentages = [
+                    0, .236, .382, .5, .618, 1, 1.236, 1.382, 1.5, 1.618, 2,
+                    2.236, 2.618
+                ]
+                perc_vals = []
+                for perc in sorted(percentages, reverse=True):
+                    perc_val = float(day_fib_low) + (float(day_fib_high) -
+                                                     float(day_fib_low)) * perc
+                    day_fib_data[f"{perc}"] = {
+                        "x": day_df["begins_at"],
+                        "y":
+                        [perc_val for i in range(len(day_df["begins_at"]))],
+                        "name": f"{perc * 100:.1f} %"
+                    }
+                    perc_line = go.Scatter(day_fib_data[f"{perc}"],
+                                           line=dict(color="grey", width=1))
+                    day_fig.append_trace(perc_line, 1, 1)
+                    perc_vals.append(perc_val)
+                day_fig.update_yaxes(tickvals=perc_vals)
+
             week_fig.append_trace(week_close_price, 1, 1)
             week_fig.append_trace(week_candlestick, 2, 1)
+
+            if week_fib_direction and week_fib_high and week_fib_low:
+                week_fib_data = {}
+                percentages = [
+                    .236, .382, .5, .618, 1.236, 1.382, 1.5, 1.618, 2.618
+                ]
+                perc_vals = []
+                for perc in sorted(percentages, reverse=True):
+                    perc_val = float(week_fib_low) + (
+                        float(week_fib_high) - float(week_fib_low)) * perc
+                    week_fib_data[f"{perc}"] = {
+                        "x": week_df["begins_at"],
+                        "y":
+                        [perc_val for i in range(len(week_df["begins_at"]))],
+                        "name": f"{perc * 100:.1f} %"
+                    }
+                    perc_line = go.Scatter(week_fib_data[f"{perc}"],
+                                           line=dict(color="grey"))
+                    week_fig.append_trace(perc_line, 1, 1)
+                    perc_vals.append(perc_val)
+                week_fig.update_yaxes(tickvals=perc_vals)
 
             fig.append_trace(close_price, 1, 1)
             fig.append_trace(candlestick, 2, 1)
 
-            # blank_trace = go.Scatter(
-            #     x=None,
-            #     y=None,
-            # )
-            # fig.append_trace(blank_trace, 2, 1)
-            # fig.append_trace(blank_trace, 2, 1)
+            if year_fib_direction and year_fib_high and year_fib_low:
+                fib_data = {}
+                percentages = [
+                    .236, .382, .5, .618, 1.236, 1.382, 1.5, 1.618, 2.618
+                ]
+                perc_vals = []
+                for perc in sorted(percentages, reverse=True):
+                    perc_val = float(year_fib_low) + (
+                        float(year_fib_high) - float(year_fib_low)) * perc
+                    fib_data[f"{perc}"] = {
+                        "x": df["begins_at"],
+                        "y": [perc_val for i in range(len(df["begins_at"]))],
+                        "name": f"{perc * 100:.1f} %"
+                    }
+                    perc_line = go.Scatter(fib_data[f"{perc}"],
+                                           line=dict(color="grey"))
+                    fig.append_trace(perc_line, 1, 1)
+                    perc_vals.append(perc_val)
+                fig.update_yaxes(tickvals=perc_vals)
 
-            for i, n_days in enumerate(ema_days):
-                ema_trace = go.Scatter(x=df["begins_at"],
-                                       y=df[f"ema_{n_days}"],
-                                       name=f"ema_{n_days}")
+            if year_ema_radio_val:
+                for n_days in ema_days:
+                    df[f"ema_{n_days}"] = NaN
+                    df.at[n_days - 1, f"ema_{n_days}"] = df.iloc[:n_days][
+                        "close_price"].sum() / n_days
 
-                # ema_diff = (100.0 / df[f"ema_{n_days}"]) * (
-                #     df[f"ema_{n_days}"] - df[f"ema_{n_days}"].shift(periods=1))
+                    for i, row in df.iloc[n_days:].iterrows():
+                        df.at[i, f"ema_{n_days}"] = ema_n_days(
+                            n_days, row["close_price"],
+                            df.iloc[i - 1][f"ema_{n_days}"])
 
-                # ema_diff_rate = ema_diff - ema_diff.shift(periods=1)
+                for i, n_days in enumerate(ema_days):
+                    ema_trace = go.Scatter(x=df["begins_at"],
+                                           y=df[f"ema_{n_days}"],
+                                           name=f"ema_{n_days}")
 
-                # ema_diff_rate_trace = go.Scatter(x=df["begins_at"],
-                #                                  y=ema_diff_rate,
-                #                                  name=f"ema_{n_days}_rate")
-
-                fig.append_trace(ema_trace, 1, 1)
-                # fig.append_trace(ema_diff_rate_trace, 1, 1)
+                    fig.append_trace(ema_trace, 1, 1)
 
             day_fig.update_xaxes()
-            day_fig.update_yaxes(showgrid=True,
-                                 gridwidth=1,
-                                 gridcolor="Grey",
-                                 zeroline=True,
-                                 zerolinewidth=2,
+            day_fig.update_yaxes(zeroline=True,
+                                 zerolinewidth=1,
                                  zerolinecolor="Grey")
             day_fig.update_layout(title=f"{heading} - Day",
                                   hovermode="x unified",
@@ -286,11 +451,8 @@ def create_app(arguments=None):
 
             week_fig.update_xaxes(
                 rangebreaks=[dict(pattern="hour", bounds=[16, 9.5])])
-            week_fig.update_yaxes(showgrid=True,
-                                  gridwidth=1,
-                                  gridcolor="Grey",
-                                  zeroline=True,
-                                  zerolinewidth=2,
+            week_fig.update_yaxes(zeroline=True,
+                                  zerolinewidth=1,
                                   zerolinecolor="Grey")
             week_fig.update_layout(title=f"{heading} - Week",
                                    hovermode="x unified",
@@ -302,11 +464,8 @@ def create_app(arguments=None):
                                              color="#7f7f7f"))
 
             fig.update_xaxes(rangebreaks=[dict(bounds=["sat", "mon"])])
-            fig.update_yaxes(showgrid=True,
-                             gridwidth=1,
-                             gridcolor="Grey",
-                             zeroline=True,
-                             zerolinewidth=2,
+            fig.update_yaxes(zeroline=True,
+                             zerolinewidth=1,
                              zerolinecolor="Grey")
             fig.update_layout(title=f"{heading} - Year",
                               hovermode="x unified",
