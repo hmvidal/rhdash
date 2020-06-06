@@ -28,6 +28,34 @@ def get_name(symbol):
         return ""
 
 
+def get_fundamentals(symbol):
+    try:
+        return robin_stocks.stocks.get_fundamentals(symbol)
+    except Exception as e:
+        print("Could not get fundamentals for '{symbol}'.")
+        return None
+
+
+def get_day_data(symbol):
+    try:
+        data = robin_stocks.stocks.get_historicals(symbol,
+                                                   span="day",
+                                                   bounds="extended")
+        return data
+    except Exception as e:
+        print("Could not get day data for '{symbol}'.")
+        return None
+
+
+def get_week_data(symbol):
+    try:
+        data = robin_stocks.stocks.get_historicals(symbol, span="week")
+        return data
+    except Exception as e:
+        print("Could not get week data for '{symbol}'.")
+        return None
+
+
 def get_year_data(symbol):
     try:
         data = robin_stocks.stocks.get_historicals(symbol, span="year")
