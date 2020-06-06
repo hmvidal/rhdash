@@ -36,6 +36,7 @@ def setup_dash(config):
         html.Div(children="Symbol:"),
         dcc.Input(id="symbol", value="", type="text"),
         html.H1(id="heading", children="", style={"textAlign": "center"}),
+        html.Div(id="description-blob", style={"textAlign": "center"}),
         html.Div(id="fundamentals-table"),
         dcc.Graph(id="day-graph"),
         dcc.Graph(id="week-graph"),
@@ -66,6 +67,7 @@ def create_app(arguments=None):
 
     @app.callback([
         Output("heading", "children"),
+        Output("description-blob", "children"),
         Output("fundamentals-table", "children"),
         Output("day-graph", "figure"),
         Output("week-graph", "figure"),
@@ -73,6 +75,7 @@ def create_app(arguments=None):
     ], [Input("symbol", "value")])
     def update_figure(symbol):
         symbol = str(symbol).strip().upper()
+        description = ""
         fundamentals_table = html.Table()
         day_fig = make_subplots(rows=rows,
                                 cols=1,
@@ -97,15 +100,29 @@ def create_app(arguments=None):
             heading = f"{name} ({symbol})" if len(name) > 0 else ""
 
             fundamentals_data = get_fundamentals(symbol)
-            fundamentals_df = pd.DataFrame(fundamentals_data).iloc[0]
+            fundamentals_df = pd.DataFrame(fundamentals_data)
+            fundamentals_df_values = fundamentals_df.iloc[0]
 
             fundamentals = {}
             fundamentals[
-                "AVG VOL 2 WK"] = f"{float(fundamentals_df['average_volume_2_weeks']):,.0f}"
+                "OPEN"] = f"{float(fundamentals_df_values['open']):,.4f}"
             fundamentals[
-                "AVG VOL"] = f"{float(fundamentals_df['average_volume']):,.0f}"
+                "HIGH"] = f"{float(fundamentals_df_values['high']):,.4f}"
             fundamentals[
-                "CURR VOL"] = f"{float(fundamentals_df['volume']):,.0f}"
+                "LOW"] = f"{float(fundamentals_df_values['low']):,.4f}"
+            fundamentals[
+                "MARKET CAP"] = f"${float(fundamentals_df_values['market_cap']):,.0f}"
+            fundamentals[
+                "AVG VOL"] = f"{float(fundamentals_df_values['average_volume']):,.0f}"
+            fundamentals[
+                "CURR VOL"] = f"{float(fundamentals_df_values['volume']):,.0f}"
+
+            description = [
+                html.Br(),
+                html.P(f"{fundamentals_df_values['description']}"),
+                html.Br(),
+                html.Br()
+            ]
 
             day_data = get_day_data(symbol)
             day_df = pd.DataFrame(day_data)
@@ -203,7 +220,11 @@ def create_app(arguments=None):
             fundamentals_row = html.Tr(
                 [html.Td(fundamentals[field]) for field in fundamentals])
             fundamentals_table = html.Table([fundamentals_headers] +
-                                            [fundamentals_row])
+                                            [fundamentals_row],
+                                            style={
+                                                "marginLeft": "auto",
+                                                "marginRight": "auto"
+                                            })
 
             day_close_price = go.Scatter(day_close_price_data)
             day_candlestick = go.Candlestick(day_candle_data)
@@ -287,7 +308,7 @@ def create_app(arguments=None):
             print(f"Could not update data for '{symbol}'.")
             print(e)
 
-        return heading, fundamentals_table, day_fig, week_fig, fig
+        return heading, description, fundamentals_table, day_fig, week_fig, fig
 
     return app
 
