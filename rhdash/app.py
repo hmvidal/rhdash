@@ -21,6 +21,52 @@ from rhdash.rh import get_year_data
 from rhdash.rh import login_using
 
 
+def get_watchlist_table(config):
+    watchlist_data = get_watchlist()
+    if watchlist_data:
+        watchlist_symbols = []
+        for watch in watchlist_data:
+            watch_symbol = get_symbol_by_url(watch["instrument"])
+            if watch_symbol:
+                watchlist_symbols.append(watch_symbol)
+
+        watchlist_symbols = sorted(watchlist_symbols)
+        config["watchlist"] = watchlist_symbols
+
+        n_cols = 7
+        n_watches = len(watchlist_symbols)
+        if n_watches <= n_cols:
+            n_rows = 1
+        elif n_watches % n_cols == 0:
+            n_rows = int(n_watches / n_cols)
+        else:
+            n_rows = int(n_watches / n_cols) + 1
+
+        watchlist_headers = html.Tr([])
+
+        t_rows = []
+        for r in range(n_rows):
+            t_row = []
+            for c in range(n_cols):
+                index = r + (c * n_rows)
+                if index < n_watches:
+                    this_sym = watchlist_symbols[index]
+                    t_row.append(
+                        html.Td(html.Button(this_sym, id=f"b_{this_sym}")))
+
+            t_rows.append(html.Tr(t_row))
+
+        watchlist_table = html.Table([watchlist_headers] + t_rows,
+                                     style={
+                                         "marginLeft": "auto",
+                                         "marginRight": "auto"
+                                     })
+
+        return watchlist_table
+    else:
+        return html.Table()
+
+
 def setup_dash(config):
     """Set up dashboard server."""
 
@@ -34,56 +80,12 @@ def setup_dash(config):
             if creds["user"] != "" and creds["password"] != "":
                 dash_auth.BasicAuth(app, {creds["user"]: creds["password"]})
 
-    # def get_watchlist_table():
-    #     watchlist_data = get_watchlist()
-    #     if watchlist_data:
-    #         watchlist_symbols = []
-    #         for watch in watchlist_data:
-    #             watch_symbol = get_symbol_by_url(watch["instrument"])
-    #             if watch_symbol:
-    #                 watchlist_symbols.append(watch_symbol)
-
-    #         watchlist_symbols = sorted(watchlist_symbols)
-    #         config["watchlist"] = watchlist_symbols
-
-    #         n_cols = 10
-    #         n_watches = len(watchlist_symbols)
-    #         if n_watches <= n_cols:
-    #             n_rows = 1
-    #         elif n_watches % n_cols == 0:
-    #             n_rows = int(n_watches / n_cols)
-    #         else:
-    #             n_rows = int(n_watches / n_cols) + 1
-
-    #         watchlist_headers = html.Tr([])
-
-    #         t_rows = []
-    #         for r in range(n_rows):
-    #             t_row = []
-    #             for c in range(n_cols):
-    #                 index = r + (c * n_rows)
-    #                 if index < n_watches:
-    #                     this_sym = watchlist_symbols[index]
-    #                     t_row.append(
-    #                         html.Td(html.Button(this_sym, id=f"b_{this_sym}")))
-
-    #             t_rows.append(html.Tr(t_row))
-
-    #         watchlist_table = html.Table([watchlist_headers] + t_rows,
-    #                                      style={
-    #                                          "marginLeft": "auto",
-    #                                          "marginRight": "auto"
-    #                                      })
-
-    #         return watchlist_table
-    #     else:
-    #         return html.Table()
-
     app.layout = html.Div([
-        # html.Div(id="watchlist-table", children=get_watchlist_table()),
-        html.Div(children=[html.Br(), html.Br()]),
-        # html.Div(children="Symbol:"),
+        html.Div(id="watchlist-table", children=get_watchlist_table(config)),
+        html.Div(children=[html.Br()]),
+        html.Div(children="Symbol:"),
         dcc.Input(id="symbol", value="", type="text"),
+        html.Div(children=[html.Br()]),
         html.H1(id="heading", children="", style={"textAlign": "center"}),
         html.Div(id="description-blob", style={"textAlign": "center"}),
         html.Div(id="fundamentals-table"),
@@ -172,7 +174,24 @@ def create_app(arguments=None):
 
     rows = 2
 
+    watchlist_inputs = []
+    for w in configuration["watchlist"]:
+        watchlist_inputs.append(Input(f"b_{w}", "n_clicks_timestamp"))
+        watchlist_inputs.append(Input(f"b_{w}", "children"))
+
+    @app.callback(Output("symbol", "value"), watchlist_inputs)
+    def update_from_watchlist(*inputs):
+        buttons = {
+            str(inputs[i * 2]): inputs[i * 2 + 1]
+            for i in range(int(len(inputs) / 2)) if inputs[i * 2] is not None
+        }
+        if len(buttons) > 0:
+            button_pressed_index = max(buttons.keys())
+            return buttons[f"{button_pressed_index}"]
+        return ""
+
     @app.callback([
+        Output("watchlist-table", "children"),
         Output("heading", "children"),
         Output("description-blob", "children"),
         Output("fundamentals-table", "children"),
@@ -479,7 +498,9 @@ def create_app(arguments=None):
             print(f"Could not update data for '{symbol}'.")
             print(e)
 
-        return heading, description, fundamentals_table, day_fig, week_fig, fig
+        return get_watchlist_table(
+            configuration
+        ), heading, description, fundamentals_table, day_fig, week_fig, fig
 
     return app
 
