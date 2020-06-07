@@ -403,7 +403,7 @@ def create_app(arguments=None):
                         "name": f"{perc * 100:.1f} %"
                     }
                     perc_line = go.Scatter(day_fib_data[f"{perc}"],
-                                           line=dict(color="grey", width=0.5))
+                                           line=dict(color="grey", width=0.4))
                     day_fig.append_trace(perc_line, 1, 1)
                     perc_vals.append(perc_val)
                 day_fig.update_yaxes(tickvals=perc_vals)
@@ -467,6 +467,9 @@ def create_app(arguments=None):
 
                     fig.append_trace(ema_trace, 1, 1)
 
+            graph_height = 600
+            graph_font_size = 10
+
             day_fig.update_xaxes()
             day_fig.update_yaxes(zeroline=True,
                                  zerolinewidth=1,
@@ -474,10 +477,10 @@ def create_app(arguments=None):
             day_fig.update_layout(title=f"{heading} - Day",
                                   hovermode="x unified",
                                   showlegend=False,
-                                  height=(600 * rows),
+                                  height=(graph_height * rows),
                                   xaxis=dict(type="category"),
                                   font=dict(family="Courier New, monospace",
-                                            size=13,
+                                            size=graph_font_size,
                                             color="#7f7f7f"))
 
             week_fig.update_xaxes(
@@ -488,10 +491,10 @@ def create_app(arguments=None):
             week_fig.update_layout(title=f"{heading} - Week",
                                    hovermode="x unified",
                                    showlegend=False,
-                                   height=(420 * rows),
+                                   height=(graph_height * rows),
                                    xaxis=dict(type="category"),
                                    font=dict(family="Courier New, monospace",
-                                             size=13,
+                                             size=graph_font_size,
                                              color="#7f7f7f"))
 
             fig.update_xaxes(rangebreaks=[dict(bounds=["sat", "mon"])])
@@ -501,9 +504,9 @@ def create_app(arguments=None):
             fig.update_layout(title=f"{heading} - Year",
                               hovermode="x unified",
                               showlegend=False,
-                              height=(420 * rows),
+                              height=(graph_height * rows),
                               font=dict(family="Courier New, monospace",
-                                        size=13,
+                                        size=graph_font_size,
                                         color="#7f7f7f"))
 
         except Exception as e:
