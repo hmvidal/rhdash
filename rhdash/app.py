@@ -164,6 +164,7 @@ def init_using(config):
 
 def create_app(arguments=None):
     configuration = fetch_config(arguments)
+    configuration["symbol"] = ""
 
     if "robinhood" not in configuration:
         configuration["robinhood"] = {}
@@ -188,7 +189,7 @@ def create_app(arguments=None):
         if len(buttons) > 0:
             button_pressed_index = max(buttons.keys())
             return buttons[f"{button_pressed_index}"]
-        return ""
+        return configuration["symbol"]
 
     @app.callback([
         Output("watchlist-table", "children"),
@@ -216,6 +217,7 @@ def create_app(arguments=None):
                       year_ema_radio_val, year_fib_direction, year_fib_high,
                       year_fib_low):
         symbol = str(symbol).strip().upper()
+        configuration["symbol"] = symbol
         description = ""
         fundamentals_table = html.Table()
         day_fig = make_subplots(rows=rows,
@@ -289,8 +291,6 @@ def create_app(arguments=None):
                 day_df[col] = day_df[col].astype(float)
                 week_df[col] = week_df[col].astype(float)
                 df[col] = df[col].astype(float)
-
-            # df["percent_diff"] = 100.0 * df["close_price"].pct_change()
 
             ema_days = configuration["robinhood"][
                 "ema_days"] if "ema_days" in configuration["robinhood"] else [
@@ -368,12 +368,24 @@ def create_app(arguments=None):
             day_fig.append_trace(day_close_price, 1, 1)
             day_fig.append_trace(day_candlestick, 2, 1)
 
+            percentages = [
+                0,
+                .236,
+                .382,
+                .5,
+                .618,
+                .786,
+                1,
+                1.236,
+                1.382,
+                1.5,
+                1.618,
+                1.786,
+                2  # , 2.236, 2.382, 2.5, 2.618, 2.786, 3
+            ]
+
             if day_fib_direction and day_fib_high and day_fib_low:
                 day_fib_data = {}
-                percentages = [
-                    0, .236, .382, .5, .618, 1, 1.236, 1.382, 1.5, 1.618, 2,
-                    2.236, 2.618
-                ]
                 perc_vals = []
                 for perc in sorted(percentages, reverse=True):
                     perc_val = float(day_fib_low) + (float(day_fib_high) -
@@ -385,7 +397,7 @@ def create_app(arguments=None):
                         "name": f"{perc * 100:.1f} %"
                     }
                     perc_line = go.Scatter(day_fib_data[f"{perc}"],
-                                           line=dict(color="grey", width=1))
+                                           line=dict(color="grey", width=0.5))
                     day_fig.append_trace(perc_line, 1, 1)
                     perc_vals.append(perc_val)
                 day_fig.update_yaxes(tickvals=perc_vals)
@@ -395,9 +407,6 @@ def create_app(arguments=None):
 
             if week_fib_direction and week_fib_high and week_fib_low:
                 week_fib_data = {}
-                percentages = [
-                    .236, .382, .5, .618, 1.236, 1.382, 1.5, 1.618, 2.618
-                ]
                 perc_vals = []
                 for perc in sorted(percentages, reverse=True):
                     perc_val = float(week_fib_low) + (
@@ -419,9 +428,6 @@ def create_app(arguments=None):
 
             if year_fib_direction and year_fib_high and year_fib_low:
                 fib_data = {}
-                percentages = [
-                    .236, .382, .5, .618, 1.236, 1.382, 1.5, 1.618, 2.618
-                ]
                 perc_vals = []
                 for perc in sorted(percentages, reverse=True):
                     perc_val = float(year_fib_low) + (
@@ -462,7 +468,7 @@ def create_app(arguments=None):
             day_fig.update_layout(title=f"{heading} - Day",
                                   hovermode="x unified",
                                   showlegend=False,
-                                  height=(420 * rows),
+                                  height=(600 * rows),
                                   xaxis=dict(type="category"),
                                   font=dict(family="Courier New, monospace",
                                             size=13,
