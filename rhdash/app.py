@@ -467,7 +467,7 @@ def create_app(arguments=None):
 
                     fig.append_trace(ema_trace, 1, 1)
 
-            graph_height = 600
+            graph_height = 420
             graph_font_size = 10
 
             day_fig.update_xaxes()
