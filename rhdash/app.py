@@ -91,13 +91,23 @@ def setup_dash(config):
         html.Div(id="fundamentals-table"),
         html.Div(children=[html.Br(), html.Br()]),
         html.Div(children=[
+            dcc.RadioItems(id="day-fib-radio",
+                           options=[{
+                               "label": "Fibonacci Off",
+                               "value": False
+                           }, {
+                               "label": "Fibonacci On",
+                               "value": True
+                           }],
+                           value=None,
+                           labelStyle={"display": "inline-block"}),
             dcc.RadioItems(id="day-fib-direction-radio",
                            options=[{
-                               "label": "Fib Off",
-                               "value": None,
+                               "label": "Extension",
+                               "value": "Up"
                            }, {
-                               "label": "Fib On",
-                               "value": True
+                               "label": "Retraction",
+                               "value": "Down"
                            }],
                            value=None,
                            labelStyle={"display": "inline-block"}), " High: ",
@@ -107,13 +117,23 @@ def setup_dash(config):
         ]),
         dcc.Graph(id="day-graph"),
         html.Div(children=[
+            dcc.RadioItems(id="week-fib-radio",
+                           options=[{
+                               "label": "Fibonacci Off",
+                               "value": False
+                           }, {
+                               "label": "Fibonacci On",
+                               "value": True
+                           }],
+                           value=None,
+                           labelStyle={"display": "inline-block"}),
             dcc.RadioItems(id="week-fib-direction-radio",
                            options=[{
-                               "label": "Fib Off",
-                               "value": None,
+                               "label": "Extension",
+                               "value": "Up"
                            }, {
-                               "label": "Fib On",
-                               "value": True
+                               "label": "Retraction",
+                               "value": "Down"
                            }],
                            value=None,
                            labelStyle={"display": "inline-block"}), " High: ",
@@ -126,22 +146,32 @@ def setup_dash(config):
             dcc.RadioItems(id="year-ema-radio",
                            options=[{
                                "label": "EMAs Off",
-                               "value": None
+                               "value": False
                            }, {
                                "label": "EMAs On",
-                               "value": "Upward"
+                               "value": True
                            }],
                            value=None,
                            labelStyle={"display": "inline-block"})
         ]),
         html.Div(children=[
+            dcc.RadioItems(id="year-fib-radio",
+                           options=[{
+                               "label": "Fibonacci Off",
+                               "value": False
+                           }, {
+                               "label": "Fibonacci On",
+                               "value": True
+                           }],
+                           value=None,
+                           labelStyle={"display": "inline-block"}),
             dcc.RadioItems(id="year-fib-direction-radio",
                            options=[{
-                               "label": "Fib Off",
-                               "value": None
+                               "label": "Extension",
+                               "value": "Up"
                            }, {
-                               "label": "Fib On",
-                               "value": True
+                               "label": "Retraction",
+                               "value": "Down"
                            }],
                            value=None,
                            labelStyle={"display": "inline-block"}), " High: ",
@@ -201,20 +231,24 @@ def create_app(arguments=None):
         Output("year-graphs", "figure")
     ], [
         Input("symbol", "value"),
+        Input("day-fib-radio", "value"),
         Input("day-fib-direction-radio", "value"),
         Input("day-fib-high-input", "value"),
         Input("day-fib-low-input", "value"),
+        Input("week-fib-radio", "value"),
         Input("week-fib-direction-radio", "value"),
         Input("week-fib-high-input", "value"),
         Input("week-fib-low-input", "value"),
         Input("year-ema-radio", "value"),
+        Input("year-fib-radio", "value"),
         Input("year-fib-direction-radio", "value"),
         Input("year-fib-high-input", "value"),
         Input("year-fib-low-input", "value")
     ])
-    def update_figure(symbol, day_fib_direction, day_fib_high, day_fib_low,
-                      week_fib_direction, week_fib_high, week_fib_low,
-                      year_ema_radio_val, year_fib_direction, year_fib_high,
+    def update_figure(symbol, day_fib_toggle, day_fib_direction, day_fib_high,
+                      day_fib_low, week_fib_toggle, week_fib_direction,
+                      week_fib_high, week_fib_low, year_ema_radio_val,
+                      year_fib_toggle, year_fib_direction, year_fib_high,
                       year_fib_low):
         symbol = str(symbol).strip().upper()
         configuration["symbol"] = symbol
@@ -390,12 +424,22 @@ def create_app(arguments=None):
                 3
             ]
 
-            if day_fib_direction and day_fib_high and day_fib_low:
+            if day_fib_toggle and day_fib_high and day_fib_low:
                 day_fib_data = {}
                 perc_vals = []
-                for perc in sorted(percentages, reverse=True):
-                    perc_val = float(day_fib_low) + (float(day_fib_high) -
-                                                     float(day_fib_low)) * perc
+                for perc in sorted(
+                        percentages,
+                        reverse=True if day_fib_direction == "Up" else False):
+
+                    if day_fib_direction == "Up":
+                        perc_val = float(day_fib_low) + (
+                            float(day_fib_high) - float(day_fib_low)) * perc
+                    elif day_fib_direction == "Down":
+                        perc_val = float(day_fib_high) - (
+                            float(day_fib_high) - float(day_fib_low)) * perc
+                    else:
+                        perc_val = NaN
+
                     day_fib_data[f"{perc}"] = {
                         "x": day_df["begins_at"],
                         "y":
@@ -411,12 +455,22 @@ def create_app(arguments=None):
             week_fig.append_trace(week_close_price, 1, 1)
             week_fig.append_trace(week_candlestick, 2, 1)
 
-            if week_fib_direction and week_fib_high and week_fib_low:
+            if week_fib_toggle and week_fib_high and week_fib_low:
                 week_fib_data = {}
                 perc_vals = []
-                for perc in sorted(percentages, reverse=True):
-                    perc_val = float(week_fib_low) + (
-                        float(week_fib_high) - float(week_fib_low)) * perc
+                for perc in sorted(
+                        percentages,
+                        reverse=True if week_fib_direction == "Up" else False):
+
+                    if week_fib_direction == "Up":
+                        perc_val = float(week_fib_low) + (
+                            float(week_fib_high) - float(week_fib_low)) * perc
+                    elif week_fib_direction == "Down":
+                        perc_val = float(week_fib_high) - (
+                            float(week_fib_high) - float(week_fib_low)) * perc
+                    else:
+                        perc_val = NaN
+
                     week_fib_data[f"{perc}"] = {
                         "x": week_df["begins_at"],
                         "y":
@@ -432,12 +486,22 @@ def create_app(arguments=None):
             fig.append_trace(close_price, 1, 1)
             fig.append_trace(candlestick, 2, 1)
 
-            if year_fib_direction and year_fib_high and year_fib_low:
+            if year_fib_toggle and year_fib_high and year_fib_low:
                 fib_data = {}
                 perc_vals = []
-                for perc in sorted(percentages, reverse=True):
-                    perc_val = float(year_fib_low) + (
-                        float(year_fib_high) - float(year_fib_low)) * perc
+                for perc in sorted(
+                        percentages,
+                        reverse=True if year_fib_direction == "Up" else False):
+
+                    if year_fib_direction == "Up":
+                        perc_val = float(year_fib_low) + (
+                            float(year_fib_high) - float(year_fib_low)) * perc
+                    elif year_fib_direction == "Down":
+                        perc_val = float(year_fib_high) - (
+                            float(year_fib_high) - float(year_fib_low)) * perc
+                    else:
+                        perc_val = NaN
+
                     fib_data[f"{perc}"] = {
                         "x": df["begins_at"],
                         "y": [perc_val for i in range(len(df["begins_at"]))],
@@ -483,8 +547,10 @@ def create_app(arguments=None):
                                             size=graph_font_size,
                                             color="#7f7f7f"))
 
-            week_fig.update_xaxes(
-                rangebreaks=[dict(pattern="hour", bounds=[16, 9.5])])
+            week_fig.update_xaxes(rangebreaks=[
+                dict(bounds=["sat", "mon"]),
+                dict(pattern="hour", bounds=[16, 9.5])
+            ])
             week_fig.update_yaxes(zeroline=True,
                                   zerolinewidth=1,
                                   zerolinecolor="Grey")
