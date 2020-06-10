@@ -106,7 +106,7 @@ def setup_dash(config):
                                "label": "Extension",
                                "value": "Up"
                            }, {
-                               "label": "Retraction",
+                               "label": "Retracement",
                                "value": "Down"
                            }],
                            value=None,
@@ -132,7 +132,7 @@ def setup_dash(config):
                                "label": "Extension",
                                "value": "Up"
                            }, {
-                               "label": "Retraction",
+                               "label": "Retracement",
                                "value": "Down"
                            }],
                            value=None,
@@ -170,7 +170,7 @@ def setup_dash(config):
                                "label": "Extension",
                                "value": "Up"
                            }, {
-                               "label": "Retraction",
+                               "label": "Retracement",
                                "value": "Down"
                            }],
                            value=None,
