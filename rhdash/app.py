@@ -250,6 +250,7 @@ def create_app(arguments=None):
                       week_fib_high, week_fib_low, year_ema_radio_val,
                       year_fib_toggle, year_fib_direction, year_fib_high,
                       year_fib_low):
+        timezone_str = 'US/Eastern'
         symbol = str(symbol).strip().upper()
         configuration["symbol"] = symbol
         description = ""
@@ -280,19 +281,20 @@ def create_app(arguments=None):
             fundamentals_df = pd.DataFrame(fundamentals_data)
             fundamentals_df_values = fundamentals_df.iloc[0]
 
+            web_df_field_dict = {
+                'OPEN'       : ('open', 4),
+                'HIGH'       : ('high', 4),
+                'LOW'        : ('low', 4),
+                'MARKET CAP' : ('market_cap', 0),
+                'AVG VOL'    : ('average_volume', 0),
+                'CURR VOL'   : ('volume', 0)
+            }
+
             fundamentals = {}
-            fundamentals[
-                "OPEN"] = f"{float(fundamentals_df_values['open']):,.4f}"
-            fundamentals[
-                "HIGH"] = f"{float(fundamentals_df_values['high']):,.4f}"
-            fundamentals[
-                "LOW"] = f"{float(fundamentals_df_values['low']):,.4f}"
-            fundamentals[
-                "MARKET CAP"] = f"${float(fundamentals_df_values['market_cap']):,.0f}"
-            fundamentals[
-                "AVG VOL"] = f"{float(fundamentals_df_values['average_volume']):,.0f}"
-            fundamentals[
-                "CURR VOL"] = f"{float(fundamentals_df_values['volume']):,.0f}"
+            for web_key, df_tuple in web_df_field_dict.items():
+                (df_key, decimal_places) = df_tuple
+                value = float(fundamentals_df_values[df_key])
+                fundamentals[web_key] = f"{value:,.{decimal_places}f}"
 
             description = [
                 html.Br(),
@@ -305,13 +307,13 @@ def create_app(arguments=None):
             day_df = pd.DataFrame(day_data)
             day_df["begins_at"] = pd.to_datetime(day_df["begins_at"])
             day_df["begins_at"] = day_df["begins_at"].dt.tz_convert(
-                'US/Eastern')
+               timezone_str)
 
             week_data = get_week_data(symbol)
             week_df = pd.DataFrame(week_data)
             week_df["begins_at"] = pd.to_datetime(week_df["begins_at"])
             week_df["begins_at"] = week_df["begins_at"].dt.tz_convert(
-                'US/Eastern')
+                timezone_str)
 
             year_data = get_year_data(symbol)
             df = pd.DataFrame(year_data)
